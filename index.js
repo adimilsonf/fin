@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const webhookRoute = require('./routes/webhook');
-const connectDB = require('./db/connect');
+const { connectDB } = require('./db/connect');
 const { sequelize } = require('./db/connect'); // Importando a instância do Sequelize
 
 const app = express();
