@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db/connect');
+const { sequelize } = require('../db/connect'); // agora pega a instância correta
 
 const Transaction = sequelize.define('Transaction', {
     user: {
