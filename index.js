@@ -1,9 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
-require('dotenv').config();
-
 const webhookRoute = require('./routes/webhook');
-const reminderJob = require('./jobs/reminders');
+const connectDB = require('./db/connect');
 
 const app = express();
 app.use(bodyParser.json());
@@ -11,7 +10,8 @@ app.use(bodyParser.json());
 app.use('/webhook', webhookRoute);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Finance bot listening on port ${PORT}`);
-  reminderJob.start();
+connectDB().then(() => {
+    app.listen(PORT, () => {
+        console.log(`🚀 Servidor rodando na porta ${PORT}`);
+    });
 });
