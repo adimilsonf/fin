@@ -1,15 +1,20 @@
+// services/zapi.js
+
 const axios = require('axios');
 
-async function sendMessage(to, message) {
-    const url = \`\${process.env.ZAPI_API_URL}/instances/\${process.env.ZAPI_INSTANCE_ID}/token/\${process.env.ZAPI_TOKEN}/send-message\`;
+const url = `${process.env.ZAPI_API_URL}/instances/${process.env.ZAPI_INSTANCE_ID}/token/${process.env.ZAPI_TOKEN}/send-message`;
 
+async function sendMessage(to, message) {
     try {
-        await axios.post(url, {
+        const response = await axios.post(url, {
             phone: to,
             message: message
         });
+        console.log('Message sent successfully:', response.data);
+        return response.data;
     } catch (error) {
-        console.error("❌ Erro ao enviar mensagem:", error.response?.data || error.message);
+        console.error('Error sending message:', error);
+        throw error;
     }
 }
 
