@@ -47,4 +47,8 @@ async function handleIncomingMessage(phone, message) {
     }
 }
 
-module.exports = { handleWebhook };
+/** 
+*module.exports = { handleWebhook };
+*/
+
+module.exports = { handleIncomingMessage };
