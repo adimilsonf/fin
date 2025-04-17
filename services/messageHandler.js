@@ -1,17 +1,21 @@
-const axios = require('axios');
+const { interpretMessage } = require('./openai');
+const { sendMessage } = require('./zapi');
+const { saveTransaction } = require('../controllers/financeController');
 
-async function handleMessage(message, from) {
-  console.log('Received message from', from, ':', message);
+async function handleIncomingMessage(phone, message) {
+    try {
+        const interpreted = await interpretMessage(message);
 
-  // Aqui você chamaria a OpenAI API e salvaria no banco
-  // Simulação:
-  if (message.toLowerCase().includes('gastei')) {
-    console.log('Registrando gasto...');
-    // enviar para o banco, categorizar etc.
-  } else if (message.toLowerCase().includes('como está meu mês')) {
-    console.log('Gerando relatório...');
-    // gerar e enviar relatório
-  }
+        if (interpreted) {
+            await saveTransaction(phone, interpreted);
+            await sendMessage(phone, `📊 Registrei R$${interpreted.amount} em "${interpreted.category}" no dia ${interpreted.date}.`);
+        } else {
+            await sendMessage(phone, "🤖 Desculpe, não entendi. Pode reformular?");
+        }
+    } catch (err) {
+        console.error("Erro ao lidar com a mensagem:", err);
+        await sendMessage(phone, "⚠️ Ocorreu um erro. Tente novamente.");
+    }
 }
 
-module.exports = { handleMessage };
+module.exports = { handleIncomingMessage };
