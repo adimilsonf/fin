@@ -1,24 +1,32 @@
-require('dotenv').config();
+// Carrega .env apenas em desenvolvimento
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
+
 const express = require('express');
-const bodyParser = require('body-parser');
+const { connectDB, sequelize } = require('./db/connect');
 const webhookRoute = require('./routes/webhook');
-const { connectDB } = require('./db/connect');
-const { sequelize } = require('./db/connect'); // Importando a instância do Sequelize
 
 const app = express();
-app.use(bodyParser.json());
+
+// Faz o parsing de JSON nas requisições
+app.use(express.json());
 
 // Rota do webhook para receber mensagens do WhatsApp
 app.use('/webhook', webhookRoute);
 
-// Configuração da porta
+// Porta configurável via ambiente
 const PORT = process.env.PORT || 3000;
 
-// Conectar ao banco de dados e iniciar o servidor
-connectDB().then(async () => {
-    // Sincronizar o banco de dados com o modelo de dados
-    await sequelize.sync(); // Isso cria as tabelas se não existirem
+// Conecta ao banco, sincroniza modelos e inicia o servidor
+connectDB()
+  .then(() => sequelize.sync())
+  .then(() => {
     app.listen(PORT, () => {
-        console.log(`🚀 Servidor rodando na porta ${PORT}`);
+      console.log(`🚀 Servidor rodando na porta ${PORT}`);
     });
-});
+  })
+  .catch(err => {
+    console.error('❌ Erro ao iniciar a aplicação:', err);
+    process.exit(1);
+  });
