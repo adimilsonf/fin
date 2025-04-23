@@ -1,32 +1,33 @@
-// Carrega .env apenas em desenvolvimento
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
-
+require('dotenv').config();
 const express = require('express');
-const { connectDB, sequelize } = require('./db/connect');
+const bodyParser = require('body-parser');
 const webhookRoute = require('./routes/webhook');
+const { connectDB, sequelize } = require('./db/connect');
 
 const app = express();
-
-// Faz o parsing de JSON nas requisições
-app.use(express.json());
-
-// Rota do webhook para receber mensagens do WhatsApp
-app.use('/webhook', webhookRoute);
-
-// Porta configurável via ambiente
 const PORT = process.env.PORT || 3000;
 
-// Conecta ao banco, sincroniza modelos e inicia o servidor
-connectDB()
-  .then(() => sequelize.sync())
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`🚀 Servidor rodando na porta ${PORT}`);
-    });
-  })
-  .catch(err => {
-    console.error('❌ Erro ao iniciar a aplicação:', err);
-    process.exit(1);
-  });
+// Middlewares
+app.use(bodyParser.json());
+
+// Rota para teste simples
+app.get('/', (req, res) => {
+    res.send('✅ Servidor está rodando!');
+});
+
+// Webhook do WhatsApp
+app.use('/webhook', webhookRoute);
+
+// Iniciar servidor
+(async () => {
+    try {
+        await connectDB();
+        await sequelize.sync();
+        app.listen(PORT, () => {
+            console.log(`🚀 Servidor rodando na porta ${PORT}`);
+        });
+    } catch (error) {
+        console.error('❌ Erro ao iniciar o servidor:', error);
+        process.exit(1);
+    }
+})();
