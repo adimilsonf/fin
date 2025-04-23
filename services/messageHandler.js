@@ -1,31 +1,22 @@
-const { interpretMessage } = require('./openai');
-const { saveTransaction } = require('./transactionService');
+// services/messageHandler.js
+const { sequelize } = require('../db/connect'); // Conexão do banco de dados
+const { Message } = require('../models/message'); // Importar o modelo de dados (criaremos abaixo)
 
-/**
- * Processa a mensagem recebida e registra uma transação, se for válida.
- * @param {string} phone - Número de telefone do usuário.
- * @param {string} message - Conteúdo da mensagem recebida.
- */
-async function handleIncomingMessage(phone, message) {
+const handleMessage = async (messageData) => {
     try {
-        console.log(`🔍 Interpretando mensagem de ${phone}: "${message}"`);
+        // Supondo que a estrutura da mensagem contenha um campo 'text'
+        console.log('📬 Processando mensagem:', messageData);
 
-        const transaction = await interpretMessage(message);
+        // Exemplo: Salvar a mensagem no banco de dados
+        await Message.create({
+            content: messageData.text, // ou outro campo conforme a estrutura
+        });
 
-        if (!transaction) {
-            console.warn(`⚠️ Não foi possível interpretar a mensagem: "${message}"`);
-            return;
-        }
-
-        console.log('✅ Transação interpretada:', transaction);
-
-        // Salva a transação no banco (essa função também deve estar preparada para falhas)
-        await saveTransaction(phone, transaction);
-
-        console.log(`💾 Transação salva com sucesso para ${phone}`);
-    } catch (err) {
-        console.error(`❌ Erro ao processar mensagem do número ${phone}:`, err.message || err);
+        console.log('✅ Mensagem processada e salva no banco de dados');
+    } catch (error) {
+        console.error('❌ Erro ao processar a mensagem:', error);
+        throw new Error('Erro ao processar a mensagem');
     }
-}
+};
 
-module.exports = { handleIncomingMessage };
+module.exports = { handleMessage };
