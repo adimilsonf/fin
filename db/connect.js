@@ -1,23 +1,20 @@
-// /db/connect.js
+// db/connect.js
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize(process.env.PG_URI, {
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
-    logging: false,
+    logging: false, // Para evitar logs excessivos, você pode habilitar se necessário
 });
 
-async function connectDB() {
+const connectDB = async () => {
     try {
+        console.log("🔌 Conectando ao banco de dados...");
         await sequelize.authenticate();
-        console.log("Conectado ao banco de dados PostgreSQL");
-    } catch (err) {
-        console.error("Erro ao conectar no banco:", err);
-        process.exit(1);
+        console.log("🔌 Banco de dados conectado com sucesso!");
+    } catch (error) {
+        console.error('🔴 Erro ao conectar ao banco de dados:', error);
+        process.exit(1); // Finaliza o processo caso a conexão falhe
     }
-}
-
-// Exporta tanto a instância quanto a função
-module.exports = {
-    sequelize,
-    connectDB
 };
+
+module.exports = { connectDB, sequelize };
