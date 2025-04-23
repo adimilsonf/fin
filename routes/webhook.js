@@ -1,26 +1,21 @@
+// routes/webhook.js
 const express = require('express');
+const { handleMessage } = require('../services/messageHandler'); // Importando a função que irá tratar a mensagem
 const router = express.Router();
-const messageHandler = require('../services/messageHandler');
 
 router.post('/', async (req, res) => {
-    console.log('🛑 Entrou no webhook!');
     try {
-        const phone = req.body?.phone;
-        const message = req.body?.text?.message;
-
-        console.log("📩 Mensagem recebida de:", phone || "indefinido");
-        console.log("📄 Conteúdo:", message || "vazio");
-
-        if (message && phone) {
-            await messageHandler.handleIncomingMessage(phone, message);
-        } else {
-            console.warn("⚠️ Estrutura inesperada no webhook:", JSON.stringify(req.body, null, 2));
-        }
-
-        res.sendStatus(200);
+        const messageData = req.body; // Dados do webhook
+        console.log('📥 Webhook recebido:', messageData);
+        
+        // Processa a mensagem recebida
+        await handleMessage(messageData);
+        
+        // Envia uma resposta ao Z-API ou outro cliente de envio de webhook
+        res.status(200).send('Mensagem recebida com sucesso');
     } catch (error) {
-        console.error("❌ Erro no webhook:", error);
-        res.sendStatus(500);
+        console.error('❌ Erro no processamento do webhook:', error);
+        res.status(500).send('Erro ao processar a mensagem');
     }
 });
 
