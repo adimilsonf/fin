@@ -3,14 +3,16 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const sequelize = new Sequelize({
+// Use DATABASE_URL diretamente para conectar ao banco de dados
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    username: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    logging: false, // Opcional: desativa o log das consultas no console
+    dialectOptions: {
+        ssl: {
+            require: true,
+            rejectUnauthorized: false, // Necessário para conexões SSL no Railway
+        },
+    },
+    logging: false, // Desativa o log das consultas no console
 });
 
 const connectDB = async () => {
