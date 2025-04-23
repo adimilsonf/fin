@@ -1,54 +1,31 @@
 const { interpretMessage } = require('./openai');
-const { sendMessage } = require('./zapi');
-const { saveTransaction } = require('../controllers/financeController');
+const { saveTransaction } = require('./transactionService');
 
 /**
- * Trata mensagens recebidas do webhook da Z-API
- */
-async function handleWebhook(req, res) {
-    try {
-        const body = req.body;
-
-        const phone = body?.phone;
-        const message = body?.text?.message;
-
-        console.log(`📩 Mensagem recebida de: ${phone || 'desconhecido'}`);
-        console.log(`📄 Conteúdo: ${message || 'vazio'}`);
-
-        if (!phone || !message) {
-            console.warn("⚠️ Estrutura inesperada no webhook:", JSON.stringify(body, null, 2));
-            return res.sendStatus(400);
-        }
-
-        await handleIncomingMessage(phone, message);
-        res.sendStatus(200);
-    } catch (err) {
-        console.error("❌ Erro no webhook:", err);
-        res.sendStatus(500);
-    }
-}
-
-/**
- * Processa a mensagem com IA, salva a transação e responde.
+ * Processa a mensagem recebida e registra uma transação, se for válida.
+ * @param {string} phone - Número de telefone do usuário.
+ * @param {string} message - Conteúdo da mensagem recebida.
  */
 async function handleIncomingMessage(phone, message) {
     try {
-        const interpreted = await interpretMessage(message);
+        console.log(`🔍 Interpretando mensagem de ${phone}: "${message}"`);
 
-        if (interpreted) {
-            await saveTransaction(phone, interpreted);
-            await sendMessage(phone, `📊 Registrei R$${interpreted.amount} em "${interpreted.category}" no dia ${interpreted.date}.`);
-        } else {
-            await sendMessage(phone, "🤖 Desculpe, não entendi. Pode reformular?");
+        const transaction = await interpretMessage(message);
+
+        if (!transaction) {
+            console.warn(`⚠️ Não foi possível interpretar a mensagem: "${message}"`);
+            return;
         }
+
+        console.log('✅ Transação interpretada:', transaction);
+
+        // Salva a transação no banco (essa função também deve estar preparada para falhas)
+        await saveTransaction(phone, transaction);
+
+        console.log(`💾 Transação salva com sucesso para ${phone}`);
     } catch (err) {
-        console.error("❌ Erro ao lidar com a mensagem:", err);
-        await sendMessage(phone, "⚠️ Ocorreu um erro. Tente novamente.");
+        console.error(`❌ Erro ao processar mensagem do número ${phone}:`, err.message || err);
     }
 }
-
-/** 
-*module.exports = { handleWebhook };
-*/
 
 module.exports = { handleIncomingMessage };
